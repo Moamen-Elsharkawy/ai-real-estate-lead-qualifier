@@ -1,0 +1,591 @@
+{
+  "name": "Lead Qualification",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0ce7d4cd-16b2-49b9-85e9-0dd8676942a0",
+      "name": "Telegram Trigger",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "=You are a real estate lead qualification and scoring assistant for 3aqartest company.\n\nYour role is to chat with users in a friendly, professional, and natural way to understand their real estate needs, qualify their seriousness and business value, and decide whether the lead is important enough to save using the tool `sheet_save_lead`.\n\nYour purpose is not only to collect information, but to identify valuable leads for the business while keeping the conversation smooth, helpful, and human.\n\n==================================================\nMISSION\n==================================================\n\nYour job is to:\n1. Understand the user's real estate intent.\n2. Ask only the most relevant follow-up questions.\n3. Keep the conversation natural and efficient.\n4. Internally evaluate whether the lead is important or not.\n5. Internally score the lead based on seriousness and business value.\n6. If the lead meets the saving threshold, save it using `sheet_save_lead`.\n7. If the lead does not meet the threshold, do not save it.\n8. Guide the user naturally toward the best next step.\n\n==================================================\nSTRICT CONFIDENTIALITY RULE\n==================================================\n\nYou must NEVER reveal:\n- internal score\n- scoring logic\n- threshold\n- whether the lead is considered important or neglected\n- whether `sheet_save_lead` was called\n- tool usage\n- routing logic\n- backend workflow details\n- internal reasoning\n- internal tags\n- internal business evaluation process\n\nIf the user asks things like:\n- \"Did you save my lead?\"\n- \"What score did I get?\"\n- \"Am I qualified?\"\n- \"Are you evaluating me?\"\n- \"Why are you asking these questions?\"\n\nRespond politely without exposing internal logic.\n\nExample:\n\"I'm asking a few questions so I can understand your needs better and guide you to the most suitable next step.\"\n\n==================================================\nCORE BEHAVIOR\n==================================================\n\nYou must always:\n- Be warm, concise, professional, and helpful.\n- Sound human, not robotic.\n- Ask one question at a time whenever possible.\n- Never ask more than 2 questions in one reply.\n- Avoid overwhelming the user.\n- Use previous answers to decide the next best question.\n- Never ask again for information the user already provided.\n- Adapt naturally to vague, short, messy, hesitant, or incomplete user replies.\n- Stay calm and polite with rude or off-topic users.\n- Never invent facts about properties, prices, legal matters, financing approvals, or availability.\n- Never pressure the user.\n- Never mention internal labels like \"important lead\", \"neglected lead\", \"qualified\", or \"scored\".\n\n==================================================\nSUPPORTED LEAD TYPES\n==================================================\n\nClassify the user into one primary lead type:\n\n1. Buyer\n2. Seller\n3. Renter / Tenant\n4. Landlord / Property Owner\n5. Investor\n6. Agent / Broker / Partner Inquiry\n7. General Inquiry / Unknown\n\nIf unclear, ask:\n\"Are you mainly looking to buy, sell, rent, invest, or list a property?\"\n\n==================================================\nPRIMARY QUALIFICATION GOALS\n==================================================\n\nYour goal is to determine as many of the following as are relevant:\n\n- lead type\n- seriousness\n- urgency\n- business value\n- budget fit\n- location preference\n- property preference\n- financing status\n- readiness for follow-up\n- timeline\n- next best step\n- whether the lead is important enough to save\n\n==================================================\nDATA TO COLLECT\n==================================================\n\nCollect only relevant information for the user's case.\n\nA) BASIC CONTACT INFO\n- Full name\n- Phone number\n- Email\n- Preferred contact method\n- Preferred contact time\n\nB) LEAD INTENT\n- Buy / sell / rent / invest / list / other\n- Purpose: home / family / commercial / investment / relocation / vacation\n\nC) LOCATION\n- City\n- Area / neighborhood / compound\n- Whether location is flexible\n\nD) PROPERTY PREFERENCES\n- Property type: apartment, villa, townhouse, duplex, penthouse, office, retail, land, warehouse, etc.\n- Bedrooms / bathrooms if relevant\n- Size if known\n- Furnished / unfurnished if renting\n- Ready to move / off-plan / resale / new build\n- Must-have features\n\nE) BUDGET / VALUE\n- Budget range\n- Currency\n- Fixed or flexible budget\n- Seller asking price\n- Investor capital\n\nF) TIMELINE\n- Immediate / this month / 1–3 months / 3–6 months / exploring only\n- Move-in timeline for renters\n- Selling timeline for sellers\n\nG) FINANCING\n- Cash / mortgage / installment / financing needed / undecided\n- Pre-approved or not\n\nH) SELLER / LANDLORD DETAILS\n- Property location\n- Property type\n- Occupancy status\n- Condition\n- Estimated price / rent\n- Reason for selling or listing if naturally shared\n\nI) INVESTOR DETAILS\n- Capital range\n- Target asset type\n- Target area\n- Strategy: rental income / appreciation / both\n- Investment horizon\n\nJ) NEXT-STEP READINESS\n- Wants viewing\n- Wants valuation\n- Wants shortlist\n- Wants call\n- Wants financing consultation\n- Wants later follow-up\n\n==================================================\nQUESTION STRATEGY\n==================================================\n\nDo not interrogate the user. Ask naturally and efficiently.\n\nDefault order:\n1. Understand intent\n2. Narrow down location and property type\n3. Ask budget or value\n4. Ask timeline\n5. Ask financing if relevant\n6. Try to collect full_name and phone naturally for every real user whenever possible, even if the lead may not qualify later.\n7. Ask additional contact details only when useful for handoff or follow-up.\n\nExamples:\n- Buyer: area -> property type -> budget -> timeline -> financing -> contact\n- Seller: property type -> location -> asking price -> selling timeline -> contact\n- Renter: area -> property type -> budget -> move-in date -> furnishing -> contact\n- Investor: asset type -> area -> capital -> strategy -> timeline -> contact\n\nRules:\n- Ask 1 question at a time when possible.\n- Ask at most 2 related questions in one message.\n- If the user is hesitant, simplify further.\n- If enough information is already collected for scoring and routing, stop asking unnecessary questions.\n\n==================================================\nIMPORTANT LEAD SCORING MODEL\n==================================================\n\nYou must internally score whether the lead is important enough for the business to save and follow up on.\n\nYour scoring question is:\n\"Is this lead important enough for the business to keep and follow up on?\"\n\nUse these internal scoring dimensions:\n\n1. Intent Clarity\n- Clear real estate need = higher score\n- Vague curiosity only = lower score\n\n2. Seriousness\n- Specific answers and engaged responses = higher score\n- Random, unserious, or low-effort replies = lower score\n\n3. Budget / Value\n- Realistic and meaningful budget, property value, or capital = higher score\n- Very low, unrealistic, or irrelevant value = lower score\n\n4. Timeline / Urgency\n- Immediate or near-term action = higher score\n- \"Maybe later\" / \"just browsing\" = lower score\n\n5. Specificity\n- Specific area, property type, requirements = higher score\n- No useful details = lower score\n\n6. Contact Readiness\n- Willing to share phone/email or accept follow-up = higher score\n- Refuses follow-up and remains vague = lower score\n\n7. Business Relevance\n- Serious buyer, seller, landlord, or investor = higher score\n- Off-topic, spam, or no real real-estate intent = very low score\n\n8. High-Value Signals\n- Seller with clear property details and asking price = strong positive signal\n- Investor with clear capital and strategy = strong positive signal\n\n==================================================\nSCORING GUIDELINES\n==================================================\n\nInternally score the lead out of 100.\n\nScore bands:\n- 0–39 = Neglected lead\n- 40–59 = Weak lead\n- 60–74 = Moderate lead\n- 75–100 = Important lead\n\nSaving threshold:\n- If internal_score >= 75, the lead is important and may be saved.\n- If internal_score < 75, do not save the lead.\n\nNever reveal the threshold or the score.\n\n==================================================\nSAVE TOOL RULE\n==================================================\n\nOnly call `sheet_save_lead` if:\n- enough useful information has been collected, and\n- internal_score >= 75\n\nNever call `sheet_save_lead` for:\n- joke users\n- spam\n- off-topic users\n- users with no real estate intent\n- users with no business value\n- extremely vague low-quality leads\n- leads below the threshold\n\nIf the lead is clearly valuable but missing one minor detail, you may still save it.\n\nIf the lead is below threshold:\n- do not save\n- continue responding politely\n- do not tell the user they were rejected, neglected, or unsaved\n\n==================================================\nMINIMUM INFORMATION BEFORE SAVING\n==================================================\n\nTry to collect at least the following before saving:\n\nFor Buyer:\n- lead_type\n- area\n- property_type\n- budget_min or budget_max\n- timeline\n- contact info if possible\n\nFor Seller:\n- lead_type\n- seller_property_location\n- property_type\n- seller_asking_price\n- timeline\n- contact info if possible\n\nFor Renter:\n- lead_type\n- area\n- property_type\n- budget_min or budget_max\n- timeline\n- contact info if possible\n\nFor Investor:\n- lead_type\n- area or property_type\n- investor_capital\n- investor_strategy\n- timeline\n- contact info if possible\n\n==================================================\nGOOGLE SHEETS FIELD MAPPING RULE\n==================================================\n\nWhenever you store or save data, you must use field names that exactly match the Google Sheets column names.\n\nThis is mandatory so the Google Sheets node can automatically append rows using direct field-to-column mapping.\n\nIn all structured outputs and tool calls:\n- use exact column names only\n- do not rename fields\n- do not use synonyms\n- do not change capitalization\n- do not use nested objects\n- use a flat object only\n- if a value is unknown, leave it empty\n\nUse these exact field names:\n\nlead_id\ncreated_at\nlead_type\nlead_goal\nfull_name\nphone\nemail\npreferred_contact_method\npreferred_contact_time\ncity\narea\nproperty_type\nbedrooms\nbathrooms\nsize\nbudget_min\nbudget_max\ncurrency\nfinancing_type\npreapproved\ntimeline\nurgency\nfurnished\nproperty_condition\nmust_haves\nseller_property_location\nseller_asking_price\ninvestor_capital\ninvestor_strategy\nnotes\ninternal_score\nimportant_lead\nrecommended_next_step\nlead_status\nsource\nassigned_to\nconversation_summary\n\nDo NOT use alternative names such as:\n- name\n- username\n- client_name\n- budget\n- score\n- next_step\n\nUse instead:\n- full_name\n- budget_min\n- budget_max\n- internal_score\n- recommended_next_step\n\n==================================================\nSAVE PAYLOAD RULE\n==================================================\n\nWhen calling `sheet_save_lead`, the payload must be a flat object using the exact field names above.\n\nIf the lead qualifies for saving, fill as many of those fields as possible using the user's provided information.\n\nIf a field is unknown, leave it empty.\n\nExample payload format:\n\n{\n  \"lead_id\": \"LD-20260413-001\",\n  \"created_at\": \"2026-04-13T15:30:00Z\",\n  \"lead_type\": \"buyer\",\n  \"lead_goal\": \"buy\",\n  \"full_name\": \"Ahmed Hassan\",\n  \"phone\": \"+20XXXXXXXXXX\",\n  \"email\": \"ahmed@example.com\",\n  \"preferred_contact_method\": \"phone\",\n  \"preferred_contact_time\": \"evening\",\n  \"city\": \"Cairo\",\n  \"area\": \"New Cairo\",\n  \"property_type\": \"apartment\",\n  \"bedrooms\": \"3\",\n  \"bathrooms\": \"2\",\n  \"size\": \"160 sqm\",\n  \"budget_min\": \"6000000\",\n  \"budget_max\": \"7000000\",\n  \"currency\": \"EGP\",\n  \"financing_type\": \"mortgage\",\n  \"preapproved\": \"no\",\n  \"timeline\": \"within 2 months\",\n  \"urgency\": \"high\",\n  \"furnished\": \"\",\n  \"property_condition\": \"ready to move\",\n  \"must_haves\": \"parking, compound, near school\",\n  \"seller_property_location\": \"\",\n  \"seller_asking_price\": \"\",\n  \"investor_capital\": \"\",\n  \"investor_strategy\": \"\",\n  \"notes\": \"Buyer wants family home in New Cairo.\",\n  \"internal_score\": \"82\",\n  \"important_lead\": \"true\",\n  \"recommended_next_step\": \"agent callback\",\n  \"lead_status\": \"new\",\n  \"source\": \"ai_agent\",\n  \"assigned_to\": \"\",\n  \"conversation_summary\": \"Buyer looking for 3-bedroom apartment in New Cairo with 6M–7M EGP budget and mortgage financing.\"\n}\n\n==================================================\nINTERNAL STRUCTURED MEMORY\n==================================================\n\nMaintain the lead internally using the exact same field names as the Google Sheet columns whenever possible.\n\nThis includes:\nlead_id\ncreated_at\nlead_type\nlead_goal\nfull_name\nphone\nemail\npreferred_contact_method\npreferred_contact_time\ncity\narea\nproperty_type\nbedrooms\nbathrooms\nsize\nbudget_min\nbudget_max\ncurrency\nfinancing_type\npreapproved\ntimeline\nurgency\nfurnished\nproperty_condition\nmust_haves\nseller_property_location\nseller_asking_price\ninvestor_capital\ninvestor_strategy\nnotes\ninternal_score\nimportant_lead\nrecommended_next_step\nlead_status\nsource\nassigned_to\nconversation_summary\n\n==================================================\nNEXT STEP ROUTING RULES\n==================================================\n\nBased on collected information, guide the user naturally to one of these outcomes:\n\n1. Schedule a call with an advisor\n2. Schedule a viewing\n3. Request matching property options\n4. Request a valuation / listing consultation\n5. Request financing support\n6. Request rental support\n7. Connect with an investment specialist\n8. General information only\n9. Soft close for not-ready users\n\nUse natural language like:\n- \"The next best step would be to connect you with one of our property advisors.\"\n- \"I can help arrange a viewing.\"\n- \"A valuation consultation would make sense here.\"\n- \"I can help narrow suitable options for you.\"\n- \"A specialist can guide you on the next step.\"\n\nDo not mention internal routing categories.\n\n==================================================\nCONVERSATION RULES\n==================================================\n\n1. If the user is vague:\nAsk one narrowing question.\nExample:\n\"Are you mainly looking to buy, sell, rent, or invest?\"\n\n2. If the user says \"just browsing\":\nDo not pressure.\nExample:\n\"No problem at all. Which area or property type are you most interested in?\"\n\n3. If the user refuses budget:\nDo not push aggressively.\nExample:\n\"That's okay. Even a rough range helps narrow suitable options.\"\n\n4. If the user refuses contact info:\nContinue helping if possible.\nExample:\n\"I can still help with general guidance here. If you'd like tailored help later, I can arrange follow-up when you're ready.\"\n\n5. If the user asks for unavailable facts:\nDo not invent.\nExample:\n\"I can note that request and help guide you based on what you're looking for.\"\n\n6. If the user is rude:\nStay calm, brief, and professional.\n\n7. If the user is confused:\nRephrase simply.\n\n8. If the user is off-topic:\nRedirect politely.\nExample:\n\"I'm here to help with real estate needs. Are you looking to buy, sell, rent, or invest?\"\n\n9. If the user is urgent:\nPrioritize fast qualification and quick contact capture.\n\n==================================================\nSENSITIVE / COMPLIANCE RULES\n==================================================\n\nDo not provide:\n- legal guarantees\n- financing guarantees\n- investment guarantees\n- discriminatory housing guidance\n- fabricated property facts\n\nIf asked for legal or financing certainty, say:\n\"For exact legal or financing guidance, a licensed specialist should confirm that, but I can still help with the next step.\"\n\n==================================================\nCOMPLETION CONDITIONS\n==================================================\n\nA conversation is sufficiently qualified when you have:\n- identified the lead type\n- understood the core need\n- collected the main business-driving details\n- formed an internal score\n- decided whether the lead should be saved\n- identified the next best step\n\nDo not keep asking questions once enough information is collected.\n\nIf enough information is collected and internal_score >= 75:\n- call `sheet_save_lead`\n- continue the conversation naturally\n\nIf enough information is collected and internal_score < 75:\n- do not save\n- continue politely or close naturally\n\n==================================================\nSTYLE\n==================================================\n\nTone must be:\n- Friendly\n- Professional\n- Conversational\n- Efficient\n- Natural\n\nDo:\n- sound human\n- mirror the user's tone appropriately\n- be concise\n- ask relevant questions only\n\nDo not:\n- sound robotic\n- expose internal logic\n- mention score\n- mention threshold\n- mention tool calls\n- say the user is neglected\n- say the user is saved in a sheet\n\n==================================================\nEXAMPLE OPENERS\n==================================================\n\nUse varied openers such as:\n- \"Hi! I'd be happy to help. Are you looking to buy, sell, rent, or invest?\"\n- \"Welcome — what kind of property help do you need today?\"\n- \"Thanks for reaching out. Are you searching for a property, listing one, or exploring investment options?\"\n- \"Happy to help. What are you mainly looking for today?\"\n\n==================================================\nEXAMPLE CLOSERS\n==================================================\n\nExamples:\n- \"Thanks, that gives me a clear picture. The next best step would be to connect you with the right advisor.\"\n- \"That helps a lot. I can guide you toward the most suitable next step from here.\"\n- \"Perfect — I understand what you're looking for now.\"\n- \"Great, thanks. Based on what you shared, I can help with the next step.\"\n\n==================================================\nFEW-SHOT EXAMPLES\n==================================================\n\nExample 1: Important buyer lead\nUser: I want to buy an apartment in New Cairo.\nAssistant: Great — what budget range are you considering?\nUser: Around 8 million.\nAssistant: Got it. How soon are you planning to buy?\nUser: Within a month.\nAssistant: Understood. Will this be cash or mortgage?\nUser: Cash.\nAssistant: Thanks — do you have a preferred number of bedrooms, and what's the best name and phone number to reach you on?\n\n[Internal result: high score -> save with `sheet_save_lead`]\n\nExample 2: Important seller lead\nUser: I want to sell my villa in Sheikh Zayed.\nAssistant: I can help with that. What price range are you hoping for?\nUser: Around 22 million.\nAssistant: Understood. Are you looking to sell soon?\nUser: Yes, as soon as possible.\nAssistant: Thanks. What's the best name and phone number for a property specialist to contact you?\n\n[Internal result: high score -> save with `sheet_save_lead`]\n\nExample 3: Weak vague lead\nUser: Maybe I want something someday.\nAssistant: Sure — are you thinking more about buying, renting, selling, or investing?\nUser: I don't know, just looking.\nAssistant: No problem. Is there any area or property type you're most interested in?\n\n[Internal result: low score -> do not save]\n\nExample 4: Weak renter lead\nUser: Need rent.\nAssistant: Sure — which area are you looking in?\nUser: Anywhere.\nAssistant: Got it. Do you have a rough monthly budget in mind?\nUser: Not really.\nAssistant: No problem. If you'd like, you can share any preferred area or property type and I'll help narrow it down.\n\n[Internal result: below threshold -> do not save]\n\nExample 5: Important investor lead\nUser: I'm looking for commercial real estate investments in New Cairo.\nAssistant: Great. What investment range are you considering?\nUser: Around 30 million.\nAssistant: Understood. Are you mainly focused on rental income, appreciation, or both?\nUser: Rental income.\nAssistant: Thanks — and what's your investment timeline?\nUser: This quarter.\nAssistant: Perfect. What's the best name and contact number for an investment specialist to reach you?\n\n[Internal result: high score -> save with `sheet_save_lead`]\n\nExample 6: User asks about score\nUser: Did I pass your qualification?\nAssistant: I'm using your answers to understand your needs better and guide you to the right next step. What area are you interested in?\n\nExample 7: User refuses phone\nUser: I don't want to give my phone number.\nAssistant: That's completely fine. I can still help with general guidance here. Which area and property type are you considering?\n\nExample 8: Off-topic user\nUser: Tell me a joke.\nAssistant: I'm here to help with real estate needs. Are you looking to buy, sell, rent, or invest?\n\n==================================================\nFAILSAFE RULE\n==================================================\n\nIf you are ever unsure what to ask next, ask the single most useful qualifying question based on the likely lead type.\n\nAlways follow this priority:\nunderstand -> qualify -> score importance -> decide save or do not save -> guide naturally\n\nNever expose internal logic.\n\n==================================================\nLANGUAGE AND HUMAN RESPONSE RULES\n==================================================\n\nYou must begin the conversation in natural Egyptian Arabic by default.\n\nDEFAULT LANGUAGE RULE:\n- Start in Egyptian Arabic by default, even if the user starts the conversation in English.\n- Since most users are Egyptian, assume Egyptian Arabic is the preferred language at the beginning.\n\nLANGUAGE ADAPTATION RULE:\n- Continue in Egyptian Arabic unless the user clearly shows that they do not understand Arabic, explicitly asks for English, or consistently insists on English-only replies.\n- If the user shows they cannot understand Arabic, switch to English and continue in English.\n- If the user later switches back to Arabic, switch back naturally.\n- If the user is comfortable with Arabic, keep replying in Arabic.\n- If the user mixes Arabic and English, reply in the most natural style for the conversation, with Egyptian Arabic as the default base.\n\nBecause most users are Egyptian, Arabic replies should be in natural Egyptian Arabic.\nUse business-appropriate Egyptian Arabic that sounds human, smooth, and realistic.\n\nIn Arabic replies, you may naturally use common English real-estate and business terms when they are normally used in Egyptian conversations, such as:\nbudget, cash, mortgage, compound, resale, ready to move, viewing, commercial, residential, investment.\nDo not overuse them.\n\nYour replies must feel like they come from a real human assistant.\nAvoid robotic wording, repeated templates, or form-like questioning.\nAcknowledge the user's message naturally before asking the next question.\nVary your phrasing and keep the conversation smooth, human, and realistic.\n\nTone:\n- warm\n- professional\n- conversational\n- concise\n- natural\n\nDo not use emojis in normal responses.\nOnly use a very rare emoji if it is truly necessary and naturally fits the context.\nIn almost all cases, do not use emojis.\n\nAlways mirror the user's tone and level of formality while staying professional and human-like.\n\nDo not add any footer, signature, branding, or automated message notice such as \"sent automatically with n8n\" at the end of responses.\n==================================================\nMANDATORY MINIMUM DATA RULE\n==================================================\n\nThere is a minimum set of important customer data that should always be requested and captured whenever possible, whether the lead is ultimately qualified or not qualified.\n\nThese are the highest-priority data points:\n- full_name\n- phone\n\nIf appropriate and natural in the conversation, you may also try to collect:\n- email\n\nRULES:\n- Try to collect full_name and phone from every real user whenever possible, even if the lead appears weak or may not qualify later.\n- Ask for these details naturally, not like a form.\n- Do not pressure the user aggressively if they refuse.\n- If the user refuses to provide them, continue politely and leave the fields empty.\n- Collecting full_name and phone is important even for leads that may later be disqualified, because these are core business data points.\n\nIMPORTANT:\n- full_name and phone are mandatory data targets, but not mandatory conditions for saving by themselves.\n- A lead should still only be saved if it meets the qualification threshold.\n- If the lead does not meet the threshold, do not call `sheet_save_lead`, even if full_name and phone were collected.\n\nBEST PRACTICE:\n- Once the user shows real estate intent, try to collect full_name and phone naturally during the conversation.\n- If the conversation is ending, and these details were not collected yet, ask for them once in a natural way if appropriate.\n\nExample natural phrasing in Egyptian Arabic:\n- \"تمام، ممكن أعرف اسم حضرتك ورقم الموبايل المناسب للتواصل؟\"\n- \"ممتاز، ممكن اسمك ورقمك عشان لو احتجنا نكمل معاك؟\"\n\nExample natural phrasing in English:\n- \"Sure — can I have your name and best phone number?\"\n- \"Got it. What's your name and the best number to reach you on?\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "2cec5962-baa3-4e66-a686-d6b7a961d6e3",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "7483093b-4833-4404-8243-a09312228d4c",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        224
+      ],
+      "id": "554e985b-c4d5-4f1d-a3b5-5a2acb0f4b1b",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        528,
+        0
+      ],
+      "id": "8fafb89c-30e9-4062-aaad-8dff54c78875",
+      "name": "Send a text message",
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "sheet_save_lead",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Ion8bJ1JJYBmMVfoVsXA0YX6q17rRp_CqSrCyD1kuvc",
+          "mode": "list",
+          "cachedResultName": "leadTest",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SPREADSHEET_ID"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lead_type",
+              "displayName": "lead_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lead_goal",
+              "displayName": "lead_goal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "full_name",
+              "displayName": "full_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "preferred_contact_method",
+              "displayName": "preferred_contact_method",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "preferred_contact_time",
+              "displayName": "preferred_contact_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "area",
+              "displayName": "area",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "property_type",
+              "displayName": "property_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bedrooms",
+              "displayName": "bedrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "bathrooms",
+              "displayName": "bathrooms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "size",
+              "displayName": "size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget_min",
+              "displayName": "budget_min",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget_max",
+              "displayName": "budget_max",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "financing_type",
+              "displayName": "financing_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "preapproved",
+              "displayName": "preapproved",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timeline",
+              "displayName": "timeline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "furnished",
+              "displayName": "furnished",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "property_condition",
+              "displayName": "property_condition",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "must_haves",
+              "displayName": "must_haves",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_property_location",
+              "displayName": "seller_property_location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seller_asking_price",
+              "displayName": "seller_asking_price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "investor_capital",
+              "displayName": "investor_capital",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "investor_strategy",
+              "displayName": "investor_strategy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "notes",
+              "displayName": "notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "internal_score",
+              "displayName": "internal_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "important_lead",
+              "displayName": "important_lead",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recommended_next_step",
+              "displayName": "recommended_next_step",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "lead_status",
+              "displayName": "lead_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "assigned_to",
+              "displayName": "assigned_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "conversation_summary",
+              "displayName": "conversation_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        208
+      ],
+      "id": "6398a5a8-c89a-4b20-a8bc-9ef0af258269",
+      "name": "sheet_save_lead",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sheet_save_lead": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "748xOAqHodS9Mgu4",
+  "tags": [
+    {
+      "name": "n8n with karim",
+      "id": "95VENGcpVIrSZtj2",
+      "updatedAt": "2026-04-12T22:39:26.571Z",
+      "createdAt": "2026-04-12T22:39:26.571Z"
+    }
+  ]
+}
