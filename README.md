@@ -1,8 +1,14 @@
 # AI Real Estate Lead Qualifier
 
-A lead-qualification agent for real estate: engages prospects in natural conversation, collects buying signals, scores every lead automatically, and hands the sales team a structured, prioritized sheet, so agents spend time only on serious buyers.
+AI lead qualification for real estate teams: it talks to inbound prospects, scores every lead, and hands sales a prioritized sheet so agents call only serious buyers.
 
-**Demo video:** https://youtu.be/emWKoHsvySY
+![AI Real Estate Lead Qualifier](https://raw.githubusercontent.com/Moamen-Elsharkawy/portfolio-assets/main/covers/real-estate-qualifier.png)
+
+**[Watch the demo](https://youtu.be/emWKoHsvySY)**
+
+## The problem
+
+Real estate agents lose hours to inquiries that never turn into deals. Most inbound leads never volunteer their budget, timeline, or intent up front, so the sales team ends up chasing everyone at the same priority. Time that should go to serious buyers gets spread thin across people who were never going to purchase.
 
 ## What it does
 
@@ -11,15 +17,27 @@ A lead-qualification agent for real estate: engages prospects in natural convers
 - Scores and classifies each lead automatically
 - Logs structured lead data to Google Sheets for the sales team, filtering out unqualified buyers before they cost an agent's hour
 
+## Architecture
+
+```mermaid
+flowchart TD
+    A[Prospect messages over Telegram] --> B[Conversational AI agent, OpenRouter LLM]
+    B --> C[Extract buying signals: budget, location, purpose, timeline]
+    C --> D[Score and classify the lead]
+    D --> E{Qualified buyer?}
+    E -->|Yes| F[Log structured lead to Google Sheets for the sales team]
+    E -->|No| G[Filter out before it costs an agent's hour]
+```
+
+## Stack
+
+n8n, OpenRouter (LLM), Telegram Bot API, Google Sheets.
+
 ## Workflow
 
 | File | Role |
 |---|---|
 | `lead-qualification.json` | The complete qualification agent: conversation, extraction, scoring, and sheet logging |
-
-## Stack
-
-n8n, OpenRouter (LLM), Telegram Bot API, Google Sheets.
 
 ## Import and setup
 
@@ -30,6 +48,10 @@ n8n, OpenRouter (LLM), Telegram Bot API, Google Sheets.
 ## Note on redaction
 
 All credentials, webhook IDs, spreadsheet IDs, and phone numbers have been replaced with self-describing placeholders. The workflow logic is exactly what runs in the demo.
+
+## License
+
+Released under the MIT License. See [LICENSE](LICENSE).
 
 ---
 
