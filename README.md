@@ -1,5 +1,14 @@
 # AI Real Estate Lead Qualifier
 
+## Project status and evidence
+
+**Portfolio build.** Personal demonstration; no real brokerage deployment or conversion-uplift claim.
+
+**My contribution:** Implemented conversational collection of budget, location, intent and timeline, with structured qualification records.
+
+**Verification:** Recorded demo and redacted workflow export.
+
+
 AI lead qualification for real estate teams: it talks to inbound prospects, scores every lead, and hands sales a prioritized sheet so agents call only serious buyers.
 
 ![AI Real Estate Lead Qualifier](https://raw.githubusercontent.com/Moamen-Elsharkawy/portfolio-assets/main/covers/real-estate-qualifier.png)
